@@ -4,11 +4,17 @@ from CTFd.utils import authed, pages
 from CTFd.models import db, Pages
 
 def load(app):
+	
 	shell = Blueprint('shell', __name__, template_folder='shell-templates')
 	app.register_blueprint(shell, url_prefix='/shell')
 	page = Pages('shell',""" """ )
-	db.session.add(page)
-	app.jinja_env.globals.update(pages=pages())
+	
+	shellexists = Pages.query.filter_by(route='shell').first()
+        if not shellexists:
+                db.session.add(page)
+                db.session.commit()
+
+	
 	@app.route('/shell', methods=['GET'])
 	def shell_view():
 		if not authed():
