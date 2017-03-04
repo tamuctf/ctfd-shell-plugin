@@ -19,6 +19,7 @@ EXPOSE 4200
 
 COPY add-user.sh /
 COPY user-shell /usr/local/bin/user-shell
+COPY change-user-pass.sh / 
 RUN sh -c "echo '/usr/local/bin/user-shell' >> /etc/shells"
 
 
