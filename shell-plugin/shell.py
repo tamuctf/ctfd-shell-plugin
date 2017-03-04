@@ -10,7 +10,7 @@ from itsdangerous import TimedSerializer, BadTimeSignature, Signer, BadSignature
 from passlib.hash import bcrypt_sha256
 
 from CTFd.utils import sha512, is_safe_url, authed, can_send_mail, sendmail, can_register, get_config, verify_email
-from CTFd.models import db, Teams, Pages
+from CTFd.models import db, Teams, Pages, Auth
 
 def load(app):
 	
@@ -28,7 +28,7 @@ def load(app):
 	@app.route('/shell', methods=['GET'])
 	def shell_view():
 		if not authed():
-			return redirect(url_form('auth.login', next=request.path))
+			return redirect(url_for('auth.login', next=request.path))
 
 		return render_template('shell.html',root=request.script_root) 
 	
