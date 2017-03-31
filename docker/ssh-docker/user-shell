@@ -1,5 +1,5 @@
 #!/bin/bash
 container_name=`whoami`
-docker start $container_name
-docker exec -it -u $container_name $container_name /bin/bash
-docker stop $container_name
+docker start "$container_name"
+docker exec -it -u "$container_name" "$container_name" /bin/bash
+docker stop "$container_name"

@@ -3,6 +3,7 @@ import os
 import re
 import time
 import urllib
+import xmlrpclib
 
 from flask import current_app as app, render_template, request, redirect, abort, jsonify, json as json_mod, url_for, session, Blueprint
 
@@ -10,7 +11,9 @@ from itsdangerous import TimedSerializer, BadTimeSignature, Signer, BadSignature
 from passlib.hash import bcrypt_sha256
 
 from CTFd.utils import sha512, is_safe_url, authed, can_send_mail, sendmail, can_register, get_config, verify_email
-from CTFd.models import db, Teams, Pages, Auth
+from CTFd.models import db, Teams, Pages
+import CTFd.auth
+import CTFd.views
 
 def load(app):
 	
@@ -18,7 +21,9 @@ def load(app):
 	app.register_blueprint(shell, url_prefix='/shell')
 	page = Pages('shell',""" """ )
 	auth = Blueprint('auth', __name__)
-
+	
+	shell = xmlrpclib.ServerProxy('http://localhost:8000',allow_none=True)
+	
 	shellexists = Pages.query.filter_by(route='shell').first()
         if not shellexists:
                 db.session.add(page)
@@ -71,9 +76,9 @@ def load(app):
 			db.session.commit()
 			db.session.flush()
 			
-			os.system("pwd")
-			os.system("./CTFd/plugins/shell-plugin/add-shell-user.sh " + name + " " + password)
-
+			#os.system("./CTFd/plugins/shell-plugin/add-shell-user.sh " + name + " " + password)
+			shell.add_user(name, password)
+			
 			session['username'] = team.name
 			session['id'] = team.id
 			session['admin'] = team.admin
@@ -114,8 +119,9 @@ def load(app):
 		password = request.form['password'].strip()
 		name = team.name
 		
-		os.system("docker exec shell-server ./change-user-pass.sh" + name + " " + password)
-		
+		#os.system("docker exec shell-server ./change-user-pass.sh" + name + " " + password)
+		shell.chage_user(name, password)		
+
 		team.password = bcrypt_sha256.encrypt(password)
 		db.session.commit()
 		db.session.close()
@@ -142,7 +148,86 @@ def load(app):
 		return render_template('reset_password.html', errors=['If that account exists you will receive an email, please check your inbox'])
 	    return render_template('reset_password.html')
 
+	def profile():
+		if authed():
+			if request.method == "POST":
+				errors = []
+
+				name = request.form.get('name')
+				email = request.form.get('email')
+				website = request.form.get('website')
+				affiliation = request.form.get('affiliation')
+				country = request.form.get('country')
+
+				user = Teams.query.filter_by(id=session['id']).first()
+
+				if not get_config('prevent_name_change'):
+					names = Teams.query.filter_by(name=name).first()
+					name_len = len(request.form['name']) < 2
+
+				emails = Teams.query.filter_by(email=email).first()
+				valid_email = re.match(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", email)
+
+				if ('password' in request.form.keys() and not len(request.form['password']) == 0) and \
+					(not bcrypt_sha256.verify(request.form.get('confirm').strip(), user.password)):
+					errors.append("Your old password doesn't match what we have.")
+				if not valid_email:
+					errors.append("That email doesn't look right")
+				if not get_config('prevent_name_change') and names and name != session['username']:
+					errors.append('That team name is already taken')
+				if emails and emails.id != session['id']:
+					errors.append('That email has already been used')
+				if not get_config('prevent_name_change') and name_len:
+					errors.append('Pick a longer team name')
+				if website.strip() and not validate_url(website):
+					errors.append("That doesn't look like a valid URL")
+
+				if len(errors) > 0:
+					return render_template('profile.html', name=name, email=email, website=website,
+							   affiliation=affiliation, country=country, errors=errors)
+				else:
+					team = Teams.query.filter_by(id=session['id']).first()
+					if not get_config('prevent_name_change'):
+						team.name = name
+					if team.email != email.lower():
+						team.email = email.lower()
+						if get_config('verify_emails'):
+							team.verified = False
+					session['username'] = team.name
+
+					if 'password' in request.form.keys() and not len(request.form['password']) == 0:
+						team.password = bcrypt_sha256.encrypt(request.form.get('password'))
+						password = request.form['password'].strip()
+						
+					team.website = website
+					team.affiliation = affiliation
+					team.country = country
+						
+					name = team.name
+
+					if password:
+						shell.change_user(name, password)
+						#os.system("docker exec shell-server ./change-user-pass.sh " + name + " " + password)
+						
+					db.session.commit()
+					db.session.close()
+					return redirect(url_for('views.profile'))
+			else:
+				user = Teams.query.filter_by(id=session['id']).first()
+				name = user.name
+				email = user.email
+				website = user.website
+				affiliation = user.affiliation
+				country = user.country
+				prevent_name_change = get_config('prevent_name_change')
+				confirm_email = get_config('verify_emails') and not user.verified
+				return render_template('profile.html', name=name, email=email, website=website, affiliation=affiliation,
+						   country=country, prevent_name_change=prevent_name_change, confirm_email=confirm_email)
+		else:
+			return redirect(url_for('auth.login'))
+
+
 
 	app.view_functions['auth.reset_password'] = reset_password
 	app.view_functions['auth.register'] = register
-	
+	app.view_functions['views.profile'] = profile	
