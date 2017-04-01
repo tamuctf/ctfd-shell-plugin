@@ -13,16 +13,12 @@ server = SimpleXMLRPCServer(("localhost", 8000),
 
 server.register_introspection_functions()
 
-def hello_func(name):
-        return "Hello, {}!".format(name)
-
 def add_user_func(name, password):
 	os.system("docker exec shell-server ./add-user.sh " + name + " " + password)
 	
 def change_user_func(name, password):
 	os.system("docker exec shell-server ./change-user-pass.sh " + name + " " + password)
 
-server.register_function(hello_func, 'hello')
 server.register_function(add_user_func, 'add_user')
 server.register_function(change_user_func, 'change_user')
 
