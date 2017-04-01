@@ -14,14 +14,13 @@ RUN tar --strip-components=1 -xvzf docker-1.13.1.tgz -C /usr/local/bin
 
 RUN mkdir /var/run/sshd
 
-EXPOSE 31337
+EXPOSE 2222
 EXPOSE 4200
 
-COPY green_black.css /
 COPY add-user.sh /
 COPY user-shell /usr/local/bin/user-shell
 COPY change-user-pass.sh / 
-COPY certificate.pem /
+
 RUN sh -c "echo '/usr/local/bin/user-shell' >> /etc/shells"
 
 
