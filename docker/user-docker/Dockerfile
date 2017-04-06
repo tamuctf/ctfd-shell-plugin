@@ -20,5 +20,5 @@ RUN apt-get update && apt-get install -y\
 	sudo\	
 	python-pip
 
-ENV USER $user
-RUN useradd -ms /bin/bash $USER	
+ARG USER 
+RUN useradd -ms /bin/bash USER	
