@@ -3,7 +3,7 @@ FROM ubuntu:latest
 RUN apt-get update
 RUN apt-get upgrade -y
 RUN apt-get install -y openssh-server
-RUN apt-get install -y shellinabox curl tar acl
+RUN apt-get install -y shellinabox curl tar acl git
 RUN groupadd ctf-users
 RUN groupadd docker
 
@@ -20,6 +20,7 @@ EXPOSE 4200
 COPY add-user.sh /
 COPY user-shell /usr/local/bin/user-shell
 COPY change-user-pass.sh / 
+COPY UDockerfile /Dockerfile
 
 RUN sh -c "echo '/usr/local/bin/user-shell' >> /etc/shells"
 
