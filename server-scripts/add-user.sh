@@ -8,7 +8,7 @@ chsh -s /usr/local/bin/user-shell "$1"
 
 docker build -t user-image --build-arg USER="$1" -f docker/user-docker/Dockerfile github.com/tamuctf/CTFd-shell-plugin 
 
-docker create -it --name "$1" -w /home/"$1" --read-only -e TMOUT=300 -h tamuctf-shell --cpus=".5" --memory="500M" user-image /bin/bash
+docker create -it --name "$1" -w /home/"$1" --read-only -e TMOUT=300 -h tamuctf-shell --cpus=".5" --memory="500M" -v /home/"$1" user-image /bin/bash
 
 #docker start "$1"
 #docker exec "$1" useradd -ms /bin/bash "$1"

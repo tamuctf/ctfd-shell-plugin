@@ -10,9 +10,9 @@ cp server-scripts/add-user.sh docker/ssh-docker/
 cp server-scripts/user-shell docker/ssh-docker/
 cp server-scripts/change-user-pass.sh docker/ssh-docker
 
-#pushd docker/user-docker
-#    docker build -t user-image . -m 500M 
-#popd
+pushd docker/user-docker
+    docker build -t user-image --build-arg USER="test" -f docker/user-docker/Dockerfile github.com/tamuctf/CTFd-shell-plugin
+popd
 
 pushd docker/ssh-docker
 	docker build -t shell-image .
