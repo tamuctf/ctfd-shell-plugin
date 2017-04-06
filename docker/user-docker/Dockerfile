@@ -21,4 +21,4 @@ RUN apt-get update && apt-get install -y\
 	python-pip
 
 ARG USER 
-RUN useradd -ms /bin/bash USER	
+RUN useradd -ms /bin/bash $USER	
