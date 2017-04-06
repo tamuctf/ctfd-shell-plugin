@@ -15,4 +15,6 @@ RUN apt-get update && apt-get install -y\
 	strace\
 	ltrace\
 	nano\
+	dnsutils\
+	iputils-ping\
 	python-pip

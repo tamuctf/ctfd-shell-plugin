@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 apt-get update
 
 apt-get install -y docker.io python-pip
@@ -7,8 +9,6 @@ apt-get install -y docker.io python-pip
 cp server-scripts/add-user.sh docker/ssh-docker/
 cp server-scripts/user-shell docker/ssh-docker/
 cp server-scripts/change-user-pass.sh docker/ssh-docker
-
-cp server-scripts/add-shell-user.sh shell-plugin/
 
 pushd docker/user-docker
     docker build -t user-image . -m 500M 
