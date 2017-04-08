@@ -1,2 +1,4 @@
 #!/bin/bash
-echo -e "$2\n$2" | passwd "$1"
+USER=${1// /}
+PASS=${2// /}
+echo -e "$PASS\n$PASS" | passwd "$USER"

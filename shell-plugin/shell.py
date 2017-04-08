@@ -66,7 +66,7 @@ def load(app):
 		    errors.append('Pick a shorter password')
 		if name_len:
 		    errors.append('Pick a longer team name')
-
+		
 		if len(errors) > 0:
 		    return render_template('register.html', errors=errors, name=request.form['name'], email=request.form['email'], password=request.form['password'])
 		else:
@@ -76,7 +76,6 @@ def load(app):
 			db.session.commit()
 			db.session.flush()
 			
-			#os.system("./CTFd/plugins/shell-plugin/add-shell-user.sh " + name + " " + password)
 			shell.add_user(name, password)
 			
 			session['username'] = team.name
@@ -119,8 +118,7 @@ def load(app):
 		password = request.form['password'].strip()
 		name = team.name
 		
-		#os.system("docker exec shell-server ./change-user-pass.sh" + name + " " + password)
-		shell.chage_user(name, password)		
+		shell.change_user(name, password)		
 
 		team.password = bcrypt_sha256.encrypt(password)
 		db.session.commit()
@@ -207,7 +205,6 @@ def load(app):
 
 					if password:
 						shell.change_user(name, password)
-						#os.system("docker exec shell-server ./change-user-pass.sh " + name + " " + password)
 						
 					db.session.commit()
 					db.session.close()
