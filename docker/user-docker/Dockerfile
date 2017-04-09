@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y\
 	nano\
 	dnsutils\
 	iputils-ping\
+	curl\
+	wget\
 	python-pip
 
 ARG USER 
