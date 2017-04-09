@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="inst" style="text-align: center;height:12vh;">
+  <p>To login use the username and password you registered with.</p>
+  <p>You may login over ssh with "username@shell.ctf.tamu.edu -p 2222"</p>
+</div>
 <div class="shell">
-  <iframe src="http://ctf.cse.tamu.edu:4200" id="gadget0" name="gadget0" fram    eborder="1" height="500" width="720"></iframe>
+  <iframe src="https://shell.ctf.tamu.edu/shell/" id="gadget0" name="gadget0" frameborder="1" style="width:100vw;height:75vh;"></iframe>
  </div>
 {% endblock %}

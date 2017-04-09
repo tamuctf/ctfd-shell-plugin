@@ -22,7 +22,7 @@ def load(app):
 	page = Pages('shell',""" """ )
 	auth = Blueprint('auth', __name__)
 	
-	shell = xmlrpclib.ServerProxy('http://localhost:8000',allow_none=True)
+	shell = xmlrpclib.ServerProxy('http://172.31.10.11:8000',allow_none=True)
 	
 	shellexists = Pages.query.filter_by(route='shell').first()
         if not shellexists:
@@ -50,10 +50,14 @@ def load(app):
 		name_len = len(name) < 2  
 		names = Teams.query.add_columns('name', 'id').filter_by(name=name).first()
 		emails = Teams.query.add_columns('email', 'id').filter_by(email=email).first()
-		pass_short = len(password) == 0
-		pass_long = len(password) > 128
+		pass_short = len(password) <= 9
+		pass_long = len(password) > 32
 		valid_email = re.match(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", request.form['email'])
-
+		
+		valid_user = re.match("[a-z][a-z0-9_]", name)		
+		#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
+		valid_pass = re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]", password)
+	
 		if not valid_email:
 		    errors.append("That email doesn't look right")
 		if names:
@@ -66,6 +70,10 @@ def load(app):
 		    errors.append('Pick a shorter password')
 		if name_len:
 		    errors.append('Pick a longer team name')
+		if not valid_user:
+			errors.append('Pick an alphanumeric team name')	
+		if not valid_pass:
+			errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Character')
 		
 		if len(errors) > 0:
 		    return render_template('register.html', errors=errors, name=request.form['name'], email=request.form['email'], password=request.form['password'])
@@ -118,6 +126,22 @@ def load(app):
 		password = request.form['password'].strip()
 		name = team.name
 		
+		pass_short = len(password) <= 9
+		pass_long = len(password) > 32
+		#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
+		valid_pass = re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]", password)
+		
+		errors = []
+		
+		if pass_short:
+			errors.append('Pick a longer password')
+		if pass_long:
+			errors.append('Pick a shorter password')
+		if not valid_pass:
+			errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Character')
+		if len(errors) > 0:
+			return render_template('reset_password.html', errors=errors)
+
 		shell.change_user(name, password)		
 
 		team.password = bcrypt_sha256.encrypt(password)
@@ -165,7 +189,15 @@ def load(app):
 
 				emails = Teams.query.filter_by(email=email).first()
 				valid_email = re.match(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", email)
-
+				
+				password = request.form['password'].strip()
+				pass_short = len(password) <= 9
+				pass_long = len(password) > 32
+				
+				valid_user = re.match("[a-z][a-z0-9_]", name)	
+				#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
+				valid_pass = re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]", password)
+	
 				if ('password' in request.form.keys() and not len(request.form['password']) == 0) and \
 					(not bcrypt_sha256.verify(request.form.get('confirm').strip(), user.password)):
 					errors.append("Your old password doesn't match what we have.")
@@ -179,7 +211,16 @@ def load(app):
 					errors.append('Pick a longer team name')
 				if website.strip() and not validate_url(website):
 					errors.append("That doesn't look like a valid URL")
-
+				if not valid_pass:
+					errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Character')
+				if not valid_user:
+					errors.append('Pick an alphanumeric team name')	
+				if pass_short:
+		    			errors.append('Pick a longer password')
+				if pass_long:
+		    			errors.append('Pick a shorter password')
+				
+	
 				if len(errors) > 0:
 					return render_template('profile.html', name=name, email=email, website=website,
 							   affiliation=affiliation, country=country, errors=errors)
