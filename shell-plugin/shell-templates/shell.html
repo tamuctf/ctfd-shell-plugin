@@ -1,11 +1,33 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="inst" style="text-align: center;height:12vh;">
-  <p>To login use the username and password you registered with.</p>
-  <p>You may login over ssh with "username@shell.ctf.tamu.edu -p 2222"</p>
+
+<style>
+#shell-container {
+  width: calc(100vw - 20px);
+  padding: 0 0 0 0;
+}
+
+#shell-help {
+  text-align: center;
+  height:75px;
+  margin: 0 0 0 0;
+  border-radius: 5px;
+}
+
+#shell {
+  height: calc(100vh - 100px);
+  width: 100%;
+}
+</style>
+
+<div id="shell-container" class="container shell-container">
+  <div id="shell-help" class="alert alert-info alert-dismissable">
+    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+    <p>Use the username and password you registered with to log in.</p>
+    <p>You may also log in over ssh at shell.ctf.tamu.edu:2222"</p>
+  </div>
+  <div class>
+    <iframe id="shell" src="https://shell.ctf.tamu.edu/shell/" id="gadget0" name="gadget0" frameborder="1"></iframe>
+  </div>
 </div>
-<div class="shell">
-  <iframe src="https://shell.ctf.tamu.edu/shell/" id="gadget0" name="gadget0" frameborder="1" style="width:100vw;height:75vh;"></iframe>
- </div>
 {% endblock %}
