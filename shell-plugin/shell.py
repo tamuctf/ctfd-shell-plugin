@@ -21,9 +21,12 @@ import CTFd.views
 def create_user_thread(q):
 	while True:
 		user_pair = q.get(block=True)
+		
 		shell = xmlrpclib.ServerProxy('http://localhost:8000',allow_none=True)
-		shell.add_user(user_pair[0], user_pair[1])
-	
+		if user_pair[2] == "create":
+			shell.add_user(user_pair[0], user_pair[1])
+		elif user_pair[2] == "change":
+			shell.change_user(user_pair[0], user_pair[1])	
 
 def load(app):
 	
@@ -40,9 +43,9 @@ def load(app):
                 db.session.commit()
 
 	q = Queue()
-	t = Thread(target=create_user_thread, args=(q,))	
-	t.setDaemon(True)
-	t.start()	
+	create_t = Thread(target=create_user_thread, args=(q,))	
+	create_t.setDaemon(True)
+	create_t.start()	
 
 	@app.route('/shell', methods=['GET'])
 	def shell_view():
@@ -71,8 +74,11 @@ def load(app):
 		valid_user = re.match("[a-z][a-z0-9_]", name)		
 		#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
 		valid_pass = re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?^=#+])[A-Za-z\d$@$!%*?^=+#]", password)
-		if '&' in password:
-			valid_pass = False			
+		
+		bad_chars = ['&', '|', '<', '>', '(', '"']
+		for ch in bad_chars:		
+			if ch in password:
+				valid_pass = False			
 	
 		if not valid_email:
 		    errors.append("That email doesn't look right")
@@ -89,7 +95,7 @@ def load(app):
 		if not valid_user:
 			errors.append('Pick an alphanumeric team name')	
 		if not valid_pass:
-			errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Characteri ($@!*?+#%=)')
+			errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Character ($@!*?+#%=)')
 		
 		if len(errors) > 0:
 		    return render_template('register.html', errors=errors, name=request.form['name'], email=request.form['email'], password=request.form['password'])
@@ -100,7 +106,7 @@ def load(app):
 			db.session.commit()
 			db.session.flush()
 			
-			q.put((name, password))			
+			q.put((name, password, "create"))			
 	
 			session['username'] = team.name
 			session['id'] = team.id
@@ -147,6 +153,11 @@ def load(app):
 		#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
 		valid_pass = re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]", password)
 		
+		bad_chars = ['&', '|', '<', '>', '(', '"']
+		for ch in bad_chars:		
+			if ch in password:
+				valid_pass = False	
+		
 		errors = []
 		
 		if pass_short:
@@ -158,7 +169,7 @@ def load(app):
 		if len(errors) > 0:
 			return render_template('reset_password.html', errors=errors)
 
-		shell.change_user(name, password)		
+		q.put((name, password, "change"))		
 
 		team.password = bcrypt_sha256.encrypt(password)
 		db.session.commit()
@@ -213,7 +224,12 @@ def load(app):
 				valid_user = re.match("[a-z][a-z0-9_]", name)	
 				#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
 				valid_pass = re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]", password)
-	
+				
+				bad_chars = ['&', '|', '<', '>', '(', '"']
+				for ch in bad_chars:		
+					if ch in password:
+						valid_pass = False	
+					
 				if ('password' in request.form.keys() and not len(request.form['password']) == 0) and \
 					(not bcrypt_sha256.verify(request.form.get('confirm').strip(), user.password)):
 					errors.append("Your old password doesn't match what we have.")
@@ -261,7 +277,7 @@ def load(app):
 					name = team.name
 
 					if password:
-						shell.change_user(name, password)
+						q.put((name, password, "change"))
 						
 					db.session.commit()
 					db.session.close()
