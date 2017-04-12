@@ -1,6 +1,9 @@
 FROM ubuntu:latest
 
-RUN apt-get update && apt-get install -y\
+RUN dpkg --add-architecture i386
+
+RUN apt-get update
+RUN apt-get install -y\
 	netcat\
 	gdb\
 	g++\
@@ -19,6 +22,10 @@ RUN apt-get update && apt-get install -y\
 	iputils-ping\
 	curl\
 	wget\
+	libc6:i386\
+	libncurses5:i386\
+	libstdc++6:i386\
+	multiarch-support\
 	python-pip
 
 ARG USER 
