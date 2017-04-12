@@ -47,6 +47,9 @@ def load(app):
 	create_t.setDaemon(True)
 	create_t.start()	
 
+	bad_chars = ['&', '|', '<', '>', '(', '"', '`', ')', "'", "$"]	
+	valid_pass_reg = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@!%*?^=#+])[A-Za-z\d@!%*?^=+#]"
+
 	@app.route('/shell', methods=['GET'])
 	def shell_view():
 		if not authed():
@@ -73,9 +76,9 @@ def load(app):
 		
 		valid_user = re.match("[a-z][a-z0-9_]", name)		
 		#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
-		valid_pass = re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?^=#+])[A-Za-z\d$@$!%*?^=+#]", password)
+		valid_pass = re.match(valid_pass_reg, password)
 		
-		bad_chars = ['&', '|', '<', '>', '(', '"']
+		
 		for ch in bad_chars:		
 			if ch in password:
 				valid_pass = False			
@@ -95,7 +98,7 @@ def load(app):
 		if not valid_user:
 			errors.append('Pick an alphanumeric team name')	
 		if not valid_pass:
-			errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Character ($@!*?+#%=)')
+			errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Character (@!*?+#%=)')
 		
 		if len(errors) > 0:
 		    return render_template('register.html', errors=errors, name=request.form['name'], email=request.form['email'], password=request.form['password'])
@@ -151,9 +154,8 @@ def load(app):
 		pass_short = len(password) <= 9
 		pass_long = len(password) > 32
 		#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
-		valid_pass = re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]", password)
+		valid_pass = re.match(valid_pass_reg, password)
 		
-		bad_chars = ['&', '|', '<', '>', '(', '"']
 		for ch in bad_chars:		
 			if ch in password:
 				valid_pass = False	
@@ -223,9 +225,8 @@ def load(app):
 				
 				valid_user = re.match("[a-z][a-z0-9_]", name)	
 				#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
-				valid_pass = re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]", password)
+				valid_pass = re.match(valid_pass_reg, password)
 				
-				bad_chars = ['&', '|', '<', '>', '(', '"']
 				for ch in bad_chars:		
 					if ch in password:
 						valid_pass = False	
