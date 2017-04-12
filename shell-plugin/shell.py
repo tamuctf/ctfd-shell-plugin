@@ -3,7 +3,9 @@ import os
 import re
 import time
 import urllib
+from threading import Thread
 import xmlrpclib
+from Queue import Queue
 
 from flask import current_app as app, render_template, request, redirect, abort, jsonify, json as json_mod, url_for, session, Blueprint
 
@@ -15,6 +17,14 @@ from CTFd.models import db, Teams, Pages
 import CTFd.auth
 import CTFd.views
 
+
+def create_user_thread(q):
+	while True:
+		user_pair = q.get(block=True)
+		shell = xmlrpclib.ServerProxy('http://localhost:8000',allow_none=True)
+		shell.add_user(user_pair[0], user_pair[1])
+	
+
 def load(app):
 	
 	shell = Blueprint('shell', __name__, template_folder='shell-templates')
@@ -22,14 +32,18 @@ def load(app):
 	page = Pages('shell',""" """ )
 	auth = Blueprint('auth', __name__)
 	
-	shell = xmlrpclib.ServerProxy('http://172.31.10.11:8000',allow_none=True)
+	shell = xmlrpclib.ServerProxy('http://localhost:8001',allow_none=True)
 	
 	shellexists = Pages.query.filter_by(route='shell').first()
         if not shellexists:
                 db.session.add(page)
                 db.session.commit()
 
-	
+	q = Queue()
+	t = Thread(target=create_user_thread, args=(q,))	
+	t.setDaemon(True)
+	t.start()	
+
 	@app.route('/shell', methods=['GET'])
 	def shell_view():
 		if not authed():
@@ -56,7 +70,9 @@ def load(app):
 		
 		valid_user = re.match("[a-z][a-z0-9_]", name)		
 		#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
-		valid_pass = re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]", password)
+		valid_pass = re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?^=#+])[A-Za-z\d$@$!%*?^=+#]", password)
+		if '&' in password:
+			valid_pass = False			
 	
 		if not valid_email:
 		    errors.append("That email doesn't look right")
@@ -73,7 +89,7 @@ def load(app):
 		if not valid_user:
 			errors.append('Pick an alphanumeric team name')	
 		if not valid_pass:
-			errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Character')
+			errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Characteri ($@!*?+#%=)')
 		
 		if len(errors) > 0:
 		    return render_template('register.html', errors=errors, name=request.form['name'], email=request.form['email'], password=request.form['password'])
@@ -84,8 +100,8 @@ def load(app):
 			db.session.commit()
 			db.session.flush()
 			
-			shell.add_user(name, password)
-			
+			q.put((name, password))			
+	
 			session['username'] = team.name
 			session['id'] = team.id
 			session['admin'] = team.admin
