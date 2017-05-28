@@ -1,9 +1,10 @@
 FROM ubuntu:latest
 
 RUN apt-get update
-RUN apt-get upgrade -y
+
 RUN apt-get install -y openssh-server
-RUN apt-get install -y shellinabox curl tar acl git
+RUN apt-get update
+RUN apt-get install -y shellinabox curl tar acl git python-pip
 RUN groupadd ctf-users
 RUN groupadd docker
 
@@ -17,10 +18,14 @@ RUN mkdir /var/run/sshd
 EXPOSE 2222
 EXPOSE 4200
 
-COPY add-user.sh /
-COPY user-shell /usr/local/bin/user-shell
-COPY change-user-pass.sh / 
+COPY add_user.py /
+COPY user_shell.py /usr/local/bin/user_shell.py
+COPY change_user_pass.py / 
 
-RUN sh -c "echo '/usr/local/bin/user-shell' >> /etc/shells"
+RUN chmod +x /add_user.py
+RUN chmod +x /usr/local/bin/user_shell.py
+RUN chmod +x /change_user_pass.py
+
+RUN sh -c "echo '/usr/local/bin/user_shell.py' >> /etc/shells"
 
 

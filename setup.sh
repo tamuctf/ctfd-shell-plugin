@@ -6,9 +6,9 @@ sudo apt-get update
 
 sudo apt-get install -y docker.io python-pip
 
-cp server-scripts/add-user.sh docker/ssh-docker/
-cp server-scripts/user-shell docker/ssh-docker/
-cp server-scripts/change-user-pass.sh docker/ssh-docker
+cp server-scripts/add_user.py docker/ssh-docker/
+cp server-scripts/user_shell.py docker/ssh-docker/
+cp server-scripts/change_user_pass.py docker/ssh-docker
 
 pushd docker/user-docker
     docker build -t user-image --build-arg USER="test" -f docker/user-docker/Dockerfile github.com/tamuctf/CTFd-shell-plugin
