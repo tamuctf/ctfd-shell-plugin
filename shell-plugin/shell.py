@@ -47,9 +47,6 @@ def load(app):
 	create_t.setDaemon(True)
 	create_t.start()	
 
-	bad_chars = ['&', '|', '<', '>', '(', '"', '`', ')', "'", "$"]	
-	valid_pass_reg = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@!%*?^=#+])[A-Za-z\d@!%*?^=+#]"
-
 	@app.route('/shell', methods=['GET'])
 	def shell_view():
 		if not authed():
@@ -74,14 +71,7 @@ def load(app):
 		pass_long = len(password) > 32
 		valid_email = re.match(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", request.form['email'])
 		
-		valid_user = re.match("[a-z][a-z0-9_]", name)		
-		#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
-		valid_pass = re.match(valid_pass_reg, password)
-		
-		
-		for ch in bad_chars:		
-			if ch in password:
-				valid_pass = False			
+		valid_user = re.match("[a-z][a-z0-9_]", name)				
 	
 		if not valid_email:
 		    errors.append("That email doesn't look right")
@@ -96,9 +86,7 @@ def load(app):
 		if name_len:
 		    errors.append('Pick a longer team name')
 		if not valid_user:
-			errors.append('Pick an alphanumeric team name')	
-		if not valid_pass:
-			errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Character (@!*?+#%=)')
+			errors.append('Pick an alphanumeric team name that begins with a character')	
 		
 		if len(errors) > 0:
 		    return render_template('register.html', errors=errors, name=request.form['name'], email=request.form['email'], password=request.form['password'])
@@ -153,12 +141,6 @@ def load(app):
 		
 		pass_short = len(password) <= 9
 		pass_long = len(password) > 32
-		#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
-		valid_pass = re.match(valid_pass_reg, password)
-		
-		for ch in bad_chars:		
-			if ch in password:
-				valid_pass = False	
 		
 		errors = []
 		
@@ -166,8 +148,6 @@ def load(app):
 			errors.append('Pick a longer password')
 		if pass_long:
 			errors.append('Pick a shorter password')
-		if not valid_pass:
-			errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Character')
 		if len(errors) > 0:
 			return render_template('reset_password.html', errors=errors)
 
@@ -224,12 +204,6 @@ def load(app):
 				pass_long = len(password) > 32
 				
 				valid_user = re.match("[a-z][a-z0-9_]", name)	
-				#http://stackoverflow.com/questions/19605150/regex-for-password-must-be-contain-at-least-8-characters-least-1-number-and-bot
-				valid_pass = re.match(valid_pass_reg, password)
-				
-				for ch in bad_chars:		
-					if ch in password:
-						valid_pass = False	
 					
 				if ('password' in request.form.keys() and not len(request.form['password']) == 0) and \
 					(not bcrypt_sha256.verify(request.form.get('confirm').strip(), user.password)):
@@ -244,10 +218,8 @@ def load(app):
 					errors.append('Pick a longer team name')
 				if website.strip() and not validate_url(website):
 					errors.append("That doesn't look like a valid URL")
-				if not valid_pass:
-					errors.append('Pick a password with 1 Uppercase Character, 1 Lowercase Character, 1 Number and 1 Special Character')
 				if not valid_user:
-					errors.append('Pick an alphanumeric team name')	
+					errors.append('Pick an alphanumeric team name that begins with a character')	
 				if pass_short:
 		    			errors.append('Pick a longer password')
 				if pass_long:
