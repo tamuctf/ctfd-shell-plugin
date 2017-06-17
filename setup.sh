@@ -24,6 +24,8 @@ pushd docker/apache-docker
 	docker run -itd --name apache-server -p 80:80 -p 443:443 apache-image
 popd
 
+docker run -d --hostname shell-rabbit --name rabbit-server -p 5672:5672 -p 15672:15672 rabbitmq:latest
+
 pushd server-scripts/
 	python shell_queue_recv.py &> rabbitmqlog.txt &
 popd
