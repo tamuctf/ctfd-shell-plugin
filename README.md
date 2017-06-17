@@ -1,16 +1,29 @@
 # CTFd-shell-plugin
-Plugin for CTFd that integrates a web based shell using docker containers 
-*DISCLAIMER* This plugin is not complete and not guaranteed to be secure    
+Plugin for CTFd that integrates a web based shell using docker containers.  
+  
+*DISCLAIMER* This plugin is not guaranteed to be secure  
+
 # Usage:  
 
-##Plugin:
-Copy shell-plugin directory into to the plugins directory of CTFd  
+## Configuration:  
+There are a few manual configurations you will have to do in order to succesfully setup the plugin.  
+
+### Apache:  
+The web based shell is routed through an Apache web server with ssl enabled and then passed to the shellinabox container locally.  
+In order to setup the Apache web server for your ctf you have to make a few changes.  
+1. Add `ServerName www.example.com` and `ServerAlias example.com` with your url to the  
+`docker/apache-docker/default-ssl.conf` file.  
+2. Change `ProxyPass / http://192.168.1.68:4300/ ` and `ProxyPass /shell http://192.168.1.68:4300/` to the local/private address of your shell server.  
+Note: `localhost` will not work as the address due to the web server being inside of a docker container.  
+3. Replace `apache.crt` and `apache.key` with your own certificates.  
+
+### Plugin:
+The plugin files need a few changes in order for it to work properly for your ctf.  
+1. In `ctfd-shell-plugin/shell-plugin/shell-templates/shell.html` change `src="https://shell.ctf.tamu.edu/shell/"` to the public address of your shell server.  
+2. Replace `'localhost'` on line 27 in `ctfd-shell-plugin/shell-plugin/shell.py` with the private address of your shell server.  
+3. Replace `'localhost'` on line 5 in `ctfd-shell-plugin/server-scripts/shell_queue_recv.py` with the private address of your shell server.  
+4. Copy shell-plugin directory into to the plugins directory of CTFd  
   
-##setup.sh
-Run to set up all of the environment tools this plugin needs  
-  
-##add-user.sh  
-Script that takes a username as an argument, creates the user, changes the login shell of the user to user-shell, and creates a docker container for that user  
-  
-##user-shell  
-A login script for users that you want to be directly logged into its corresponding docker container
+### Setup  
+The final configuration needed is to just build and launch the docker containers.  
+Run `./setup.sh`  
