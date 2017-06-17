@@ -20,8 +20,8 @@ Note: `localhost` will not work as the address due to the web server being insid
 ### Plugin:
 The plugin files need a few changes in order for it to work properly for your ctf.  
 1. In `ctfd-shell-plugin/shell-plugin/shell-templates/shell.html` change `src="https://shell.ctf.tamu.edu/shell/"` to the public address of your shell server.  
-2. Replace `'localhost'` on line 27 in `ctfd-shell-plugin/shell-plugin/shell.py` with the private address of your shell server.  
-3. Replace `'localhost'` on line 5 in `ctfd-shell-plugin/server-scripts/shell_queue_recv.py` with the private address of your shell server.  
+2. Replace `'localhost'` on line 27 in `ctfd-shell-plugin/shell-plugin/shell.py` with the local/private address of your shell server.  
+3. Replace `'localhost'` on line 5 in `ctfd-shell-plugin/server-scripts/shell_queue_recv.py` with the local/private address of your shell server.  
 4. Copy shell-plugin directory into to the plugins directory of CTFd  
   
 ### Setup  
