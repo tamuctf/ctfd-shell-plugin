@@ -4,7 +4,8 @@ import re
 import time
 import urllib
 from threading import Thread
-import xmlrpclib
+import pika
+import json
 from Queue import Queue
 
 from flask import current_app as app, render_template, request, redirect, abort, jsonify, json as json_mod, url_for, session, Blueprint
@@ -16,17 +17,7 @@ from CTFd.utils import sha512, is_safe_url, authed, can_send_mail, sendmail, can
 from CTFd.models import db, Teams, Pages
 import CTFd.auth
 import CTFd.views
-
-
-def create_user_thread(q):
-	while True:
-		user_pair = q.get(block=True)
-		
-		shell = xmlrpclib.ServerProxy('http://localhost:8000',allow_none=True)
-		if user_pair[2] == "create":
-			shell.add_user(user_pair[0], user_pair[1])
-		elif user_pair[2] == "change":
-			shell.change_user(user_pair[0], user_pair[1])	
+	
 
 def load(app):
 	
@@ -35,17 +26,15 @@ def load(app):
 	page = Pages('shell',""" """ )
 	auth = Blueprint('auth', __name__)
 	
-	shell = xmlrpclib.ServerProxy('http://localhost:8001',allow_none=True)
-	
+	connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+	channel = connection.channel()
+
+	channel.queue_declare(queue='shell_queue', durable=True)
+
 	shellexists = Pages.query.filter_by(route='shell').first()
         if not shellexists:
                 db.session.add(page)
                 db.session.commit()
-
-	q = Queue()
-	create_t = Thread(target=create_user_thread, args=(q,))	
-	create_t.setDaemon(True)
-	create_t.start()	
 
 	@app.route('/shell', methods=['GET'])
 	def shell_view():
@@ -97,7 +86,14 @@ def load(app):
 			db.session.commit()
 			db.session.flush()
 			
-			q.put((name, password, "create"))			
+			message = json.dumps(["add", name, password])
+
+			channel.basic_publish(exchange='',
+	                      routing_key='shell_queue',
+	                      body=message,
+	                      properties=pika.BasicProperties(
+	                         delivery_mode = 2, # make message persistent
+	                      ))		
 	
 			session['username'] = team.name
 			session['id'] = team.id
@@ -151,7 +147,14 @@ def load(app):
 		if len(errors) > 0:
 			return render_template('reset_password.html', errors=errors)
 
-		q.put((name, password, "change"))		
+		message = json.dumps(["change", name, password])
+
+		channel.basic_publish(exchange='',
+	                      routing_key='shell_queue',
+	                      body=message,
+	                      properties=pika.BasicProperties(
+	                         delivery_mode = 2, # make message persistent
+	                      ))			
 
 		team.password = bcrypt_sha256.encrypt(password)
 		db.session.commit()
@@ -250,7 +253,14 @@ def load(app):
 					name = team.name
 
 					if password:
-						q.put((name, password, "change"))
+						message = json.dumps(["change", name, password])
+
+						channel.basic_publish(exchange='',
+	                      					routing_key='shell_queue',
+	                      					body=message,
+	                      					properties=pika.BasicProperties(
+	                         					delivery_mode = 2, # make message persistent
+	                      					))
 						
 					db.session.commit()
 					db.session.close()

@@ -4,7 +4,7 @@ set -euo pipefail
 
 sudo apt-get update
 
-sudo apt-get install -y docker.io python-pip
+sudo apt-get install -y docker.io python-pip rabbitmq-server
 
 cp server-scripts/add_user.py docker/ssh-docker/
 cp server-scripts/user_shell.py docker/ssh-docker/
@@ -25,5 +25,5 @@ pushd docker/apache-docker
 popd
 
 pushd server-scripts/
-	python script_server.py &> xmlrpc_log.txt &
+	python shell_queue_recv.py &> rabbitmqlog.txt &
 popd
