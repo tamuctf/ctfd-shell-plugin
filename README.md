@@ -1,7 +1,5 @@
 # CTFd-shell-plugin
 Plugin for CTFd that integrates a web based shell using docker containers.  
-  
-*DISCLAIMER* This plugin is not guaranteed to be secure  
 
 # Usage:  
 
