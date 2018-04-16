@@ -26,6 +26,8 @@ popd
 
 docker run -d --hostname shell-rabbit --name rabbit-server -p 5672:5672 -p 15672:15672 rabbitmq:latest
 
+sleep 10s
+
 pushd server-scripts/
 	python shell_queue_recv.py &> rabbitmqlog.txt &
 popd
